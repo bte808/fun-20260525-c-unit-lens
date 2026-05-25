@@ -4,6 +4,7 @@ import {
   exportMarkdown,
   extractFormulaIdentifiers,
   formatDimension,
+  makeReportFileName,
   mismatchSample,
   supportedUnits
 } from "./unit-engine.js";
@@ -19,10 +20,12 @@ const refs = {
   promptList: document.querySelector("#prompt-list"),
   markdownOutput: document.querySelector("#markdown-output"),
   unitOptions: document.querySelector("#unit-options"),
-  copyReport: document.querySelector("#copy-report")
+  copyReport: document.querySelector("#copy-report"),
+  downloadReport: document.querySelector("#download-report")
 };
 
 let state = structuredClone(balancedSample);
+let lastAnalysis = null;
 
 supportedUnits.forEach((unit) => {
   const option = document.createElement("option");
@@ -63,6 +66,7 @@ refs.variableTable.addEventListener("click", (event) => {
   render();
 });
 refs.copyReport.addEventListener("click", copyReport);
+refs.downloadReport.addEventListener("click", downloadReport);
 
 render();
 
@@ -143,6 +147,7 @@ function makeRemoveButton(index) {
 
 function renderResults() {
   const analysis = analyzeFormula(state.formula, state.variables);
+  lastAnalysis = analysis;
   const markdown = exportMarkdown(analysis);
 
   refs.headerStatus.textContent = analysis.verdict.label;
@@ -254,4 +259,21 @@ async function copyReport() {
       refs.copyReport.textContent = "Copy report";
     }, 1200);
   }
+}
+
+function downloadReport() {
+  const analysis = lastAnalysis || analyzeFormula(state.formula, state.variables);
+  const blob = new Blob([refs.markdownOutput.value], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = makeReportFileName(analysis);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  refs.downloadReport.textContent = "Downloaded";
+  setTimeout(() => {
+    refs.downloadReport.textContent = "Download report";
+  }, 1200);
 }

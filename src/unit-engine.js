@@ -128,6 +128,8 @@ export function analyzeFormula(formulaInput, variableRowsInput) {
 }
 
 export function exportMarkdown(analysis) {
+  const errorCount = analysis.issues.filter((issue) => issue.level === "error").length;
+  const noteCount = analysis.issues.length - errorCount;
   const lines = [
     "# Unit Lens formula check",
     "",
@@ -136,15 +138,17 @@ export function exportMarkdown(analysis) {
     `Formula: \`${analysis.formula || "(blank)"}\``,
     "",
     `Verdict: ${analysis.verdict.label}`,
+    `Summary: ${analysis.verdict.summary}`,
+    `Issue count: ${formatCount(errorCount, "error")}, ${formatCount(noteCount, "note")}`,
     "",
     "## Sides",
     "",
     `- Left: ${analysis.lhs ? analysis.lhs.text : "(none)"} -> ${
       analysis.lhs ? formatDimension(analysis.lhs.dimension) : "unknown"
-    }`,
+    } (${analysis.lhs ? explainDimension(analysis.lhs.dimension) : "Unknown dimension"})`,
     `- Right: ${analysis.rhs ? analysis.rhs.text : "(none)"} -> ${
       analysis.rhs ? formatDimension(analysis.rhs.dimension) : "unknown"
-    }`,
+    } (${analysis.rhs ? explainDimension(analysis.rhs.dimension) : "Unknown dimension"})`,
     "",
     "## Variables",
     ""
@@ -153,7 +157,9 @@ export function exportMarkdown(analysis) {
   if (analysis.variables.length) {
     analysis.variables.forEach((variable) => {
       lines.push(
-        `- ${variable.name}: ${variable.unit || "1"} -> ${formatDimension(variable.dimension)}${
+        `- ${variable.name}: ${variable.unit || "1"} -> ${formatDimension(variable.dimension)} (${explainDimension(
+          variable.dimension
+        )})${
           variable.note ? ` (${variable.note})` : ""
         }`
       );
@@ -175,6 +181,12 @@ export function exportMarkdown(analysis) {
   analysis.prompts.forEach((prompt) => lines.push(`- ${prompt}`));
 
   return `${lines.join("\n")}\n`;
+}
+
+export function makeReportFileName(analysis, now = new Date()) {
+  const date = Number.isNaN(now.getTime()) ? "today" : now.toISOString().slice(0, 10);
+  const formulaStem = slugifyFormula(analysis.equation?.left || analysis.formula || "formula");
+  return `unit-lens-${date}-${formulaStem || "formula"}.md`;
 }
 
 export function extractFormulaIdentifiers(formulaInput) {
@@ -387,8 +399,15 @@ class DimensionParser {
 
   parseMultiplicative() {
     let left = this.parsePower();
-    while (this.match("*") || this.match("/")) {
-      const operator = this.previous().value;
+    while (true) {
+      let operator = null;
+      if (this.match("*") || this.match("/")) {
+        operator = this.previous().value;
+      } else if (this.shouldImplicitMultiply()) {
+        operator = "*";
+      } else {
+        break;
+      }
       const right = this.parsePower();
       const dimension =
         operator === "*"
@@ -520,6 +539,11 @@ class DimensionParser {
 
   pushIssue(level, title, detail) {
     this.issues.push({ level, title, detail });
+  }
+
+  shouldImplicitMultiply() {
+    const token = this.peek();
+    return Boolean(token) && (token.type === "number" || token.type === "identifier" || token.value === "(");
   }
 
   match(value) {
@@ -668,6 +692,31 @@ function makePrompts(verdict, equation, lhs, rhs, variables, issues) {
     prompts.push("Check whether the function input is a pure number before applying trigonometric or logarithmic functions.");
   }
 
+  if (issues.some((issue) => issue.title === "Unknown variable")) {
+    prompts.push("Match every symbol in the formula to exactly one variable-table row before reading the verdict.");
+  }
+
+  if (issues.some((issue) => issue.title === "Unknown unit")) {
+    prompts.push("Rewrite unsupported unit names using the local unit list or compound forms such as kg*m/s^2.");
+  }
+
+  if (issues.some((issue) => issue.title === "Addition/subtraction mixes dimensions")) {
+    prompts.push("Trace each term around every plus or minus sign and verify that the terms reduce to the same dimensions.");
+  }
+
+  if (
+    issues.some((issue) =>
+      [
+        "Exponent has units",
+        "Exponent is not numeric",
+        "pow exponent has units",
+        "pow exponent is not numeric"
+      ].includes(issue.title)
+    )
+  ) {
+    prompts.push("Keep exponents dimensionless numeric constants, such as ^2, ^-1, or pow(x, 0.5).");
+  }
+
   return Array.from(new Set(prompts));
 }
 
@@ -745,4 +794,16 @@ function formatNumber(value) {
     return String(value);
   }
   return String(Number(value.toFixed(4))).replace(/\.0+$/, "");
+}
+
+function formatCount(count, noun) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function slugifyFormula(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 36);
 }

@@ -3,6 +3,7 @@ import {
   balancedSample,
   exportMarkdown,
   extractFormulaIdentifiers,
+  makeReportFileName,
   mismatchSample
 } from "../src/unit-engine.js";
 
@@ -44,6 +45,46 @@ assert(
   "trig functions should require dimensionless inputs"
 );
 
+const implicitFormula = analyzeFormula("F = m a", [
+  { name: "F", unit: "N", note: "net force" },
+  { name: "m", unit: "kg", note: "mass" },
+  { name: "a", unit: "m/s^2", note: "acceleration" }
+]);
+assert(implicitFormula.verdict.key === "balanced", "adjacent variables should be treated as multiplication");
+
+const implicitUnit = analyzeFormula("F = m * a", [
+  { name: "F", unit: "kg m / s^2", note: "force in base units" },
+  { name: "m", unit: "kg", note: "mass" },
+  { name: "a", unit: "m/s^2", note: "acceleration" }
+]);
+assert(implicitUnit.verdict.key === "balanced", "adjacent unit factors should be treated as multiplication");
+
+const powNegativeExponent = analyzeFormula("conductance = pow(R, -1)", [
+  { name: "conductance", unit: "ohm^-1", note: "inverse resistance" },
+  { name: "R", unit: "ohm", note: "resistance" }
+]);
+assert(powNegativeExponent.verdict.key === "balanced", "pow should accept negative numeric exponents");
+
+const powWithUnits = analyzeFormula("y = pow(x, t)", [
+  { name: "y", unit: "1", note: "output" },
+  { name: "x", unit: "m", note: "length" },
+  { name: "t", unit: "s", note: "time" }
+]);
+assert(
+  powWithUnits.issues.some((issue) => issue.title === "pow exponent has units"),
+  "pow exponents should be dimensionless"
+);
+
+const unknownUnit = analyzeFormula("F = m * a", [
+  { name: "F", unit: "newton", note: "unsupported alias" },
+  { name: "m", unit: "kg", note: "mass" },
+  { name: "a", unit: "m/s^2", note: "acceleration" }
+]);
+assert(
+  unknownUnit.prompts.some((prompt) => prompt.includes("compound forms such as kg*m/s^2")),
+  "unknown units should generate a concrete repair prompt"
+);
+
 const identifiers = extractFormulaIdentifiers("period = 2 * sqrt(length / g)");
 assert(identifiers.includes("period"), "identifier extraction should include lhs");
 assert(identifiers.includes("length"), "identifier extraction should include rhs variables");
@@ -53,6 +94,15 @@ const report = exportMarkdown(balanced);
 assert(report.includes("Generated locally"), "report should include local-use warning");
 assert(report.includes("Formula:"), "report should include formula");
 assert(report.includes("Study prompts"), "report should include prompts");
+assert(report.includes("Summary:"), "report should include a verdict summary");
+assert(report.includes("Issue count:"), "report should include an issue count");
+assert(report.includes("mass +1"), "report should include base-dimension explanations");
+
+const reportFileName = makeReportFileName(balanced, new Date("2026-05-25T00:00:00.000Z"));
+assert(
+  reportFileName === "unit-lens-2026-05-25-f.md",
+  "report filename should be deterministic and safe for downloads"
+);
 
 const invalidCharacter = analyzeFormula("F = m * a·t", balancedSample.variables);
 assert(
@@ -60,4 +110,6 @@ assert(
   "invalid characters should become reportable issues instead of thrown exceptions"
 );
 
-console.log("Smoke tests passed: parsing, dimension balance, mixed additions, function checks, and Markdown export.");
+console.log(
+  "Smoke tests passed: parsing, implicit multiplication, exponent guards, dimension balance, function checks, and Markdown export."
+);

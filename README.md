@@ -11,7 +11,7 @@ It runs as a static HTML/CSS/JS app. There are no accounts, keys, uploads, track
 - Flag left/right dimension mismatches.
 - Flag plus or minus terms that mix different dimensions.
 - Flag trigonometric and logarithmic functions when their inputs still have units.
-- Generate a Markdown ledger with the formula, variable table, issues, and study prompts.
+- Generate a Markdown ledger with the formula, variable table, issues, study prompts, and a deterministic `.md` download.
 
 ## Good study and research use cases
 
@@ -55,7 +55,7 @@ Because the app has no dependencies, opening `index.html` directly also works in
 npm run check
 ```
 
-This runs JavaScript syntax checks plus a smoke test for the formula parser, balanced sample, mismatch sample, mixed-addition guard, function guard, identifier extraction, and Markdown export.
+This runs JavaScript syntax checks plus a smoke test for the formula parser, implicit multiplication, balanced sample, mismatch sample, mixed-addition guard, exponent guards, function guard, identifier extraction, Markdown export, and report filename generation.
 
 ## Core usage
 
@@ -63,11 +63,11 @@ This runs JavaScript syntax checks plus a smoke test for the formula parser, bal
 2. Add every variable in the table.
 3. Give each variable a unit expression.
 4. Read the verdict, side dimensions, issue list, and study prompts.
-5. Copy the Markdown report into notes or a lab log.
+5. Copy or download the Markdown report into notes or a lab log.
 
 ## Supported syntax
 
-- Operators: `+`, `-`, `*`, `/`, `^`, parentheses.
+- Operators: `+`, `-`, `*`, `/`, `^`, parentheses, and adjacent factors such as `2m`, `m a`, or `m(length + width)` for implicit multiplication.
 - Functions: `sqrt(x)`, `square(x)`, `abs(x)`, `pow(x, n)`, `sin(x)`, `cos(x)`, `tan(x)`, `log(x)`, `ln(x)`, `exp(x)`.
 - Unit expressions: `m`, `kg`, `s`, `N`, `J`, `W`, `Pa`, `Hz`, `C`, `V`, `ohm`, `L`, `m/s`, `m/s^2`, `kg*m/s^2`, and `1` for dimensionless values.
 
