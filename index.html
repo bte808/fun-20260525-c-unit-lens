@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Unit Lens is a local dimensional-analysis study helper for formulas."
+    />
+    <title>Unit Lens</title>
+    <link rel="icon" href="./favicon.svg" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Unit Lens</p>
+        <h1>Formula dimension check</h1>
+      </div>
+      <div class="status-pill" id="header-status">Sample ready</div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel input-panel" aria-labelledby="formula-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Input</p>
+            <h2 id="formula-title">Formula and units</h2>
+          </div>
+          <div class="button-row">
+            <button type="button" class="secondary" id="load-balanced">Balanced</button>
+            <button type="button" class="secondary" id="load-mismatch">Mismatch</button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Formula</span>
+          <input
+            id="formula-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="F = m * a"
+          />
+        </label>
+
+        <div class="toolbar">
+          <button type="button" id="sync-vars">Find variables</button>
+          <button type="button" class="secondary" id="add-variable">Add variable</button>
+        </div>
+
+        <div class="table-shell" aria-label="Variable unit table">
+          <div class="var-table" id="variable-table"></div>
+        </div>
+
+        <datalist id="unit-options"></datalist>
+
+        <div class="unit-hint">
+          Common units: m, kg, s, N, J, W, Pa, Hz, m/s, m/s^2, kg*m/s^2, 1.
+        </div>
+      </section>
+
+      <section class="panel result-panel" aria-labelledby="result-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Result</p>
+            <h2 id="result-title">Dimension ledger</h2>
+          </div>
+          <button type="button" id="copy-report">Copy report</button>
+        </div>
+
+        <div class="verdict" id="verdict"></div>
+        <div class="dimension-grid" id="dimension-grid"></div>
+        <div class="issue-list" id="issue-list"></div>
+        <div class="step-list" id="step-list"></div>
+        <div class="prompt-list" id="prompt-list"></div>
+
+        <label class="field export-field">
+          <span>Markdown report</span>
+          <textarea id="markdown-output" readonly></textarea>
+        </label>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

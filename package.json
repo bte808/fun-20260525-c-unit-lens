@@ -1,0 +1,20 @@
+{
+  "name": "fun-20260525-c-unit-lens",
+  "version": "1.0.0",
+  "description": "Local dimensional-analysis study helper for checking formulas and exporting review notes.",
+  "type": "module",
+  "private": false,
+  "scripts": {
+    "start": "python3 -m http.server 5178 --bind localhost",
+    "check": "node --check src/unit-engine.js && node --check src/app.js && node scripts/smoke-test.mjs",
+    "test": "node scripts/smoke-test.mjs"
+  },
+  "keywords": [
+    "study-tool",
+    "dimensional-analysis",
+    "physics",
+    "formula-checker",
+    "static-site"
+  ],
+  "license": "MIT"
+}
