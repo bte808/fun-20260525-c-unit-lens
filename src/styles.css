@@ -33,6 +33,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -183,6 +184,7 @@ h3 {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--line-strong);
@@ -197,6 +199,11 @@ input {
   padding: 0 12px;
 }
 
+select {
+  min-height: 42px;
+  padding: 0 36px 0 12px;
+}
+
 textarea {
   min-height: 180px;
   resize: vertical;
@@ -207,6 +214,7 @@ textarea {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-color: var(--teal);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);

@@ -3,6 +3,7 @@ import {
   balancedSample,
   exportMarkdown,
   extractFormulaIdentifiers,
+  formulaPresets,
   formatDimension,
   makeReportFileName,
   mismatchSample,
@@ -12,6 +13,7 @@ import {
 const refs = {
   headerStatus: document.querySelector("#header-status"),
   formulaInput: document.querySelector("#formula-input"),
+  templateSelect: document.querySelector("#formula-template"),
   variableTable: document.querySelector("#variable-table"),
   verdict: document.querySelector("#verdict"),
   dimensionGrid: document.querySelector("#dimension-grid"),
@@ -25,7 +27,9 @@ const refs = {
 };
 
 let state = structuredClone(balancedSample);
+let activePresetKey = "force";
 let lastAnalysis = null;
+const presetByKey = new Map(formulaPresets.map((preset) => [preset.key, preset]));
 
 supportedUnits.forEach((unit) => {
   const option = document.createElement("option");
@@ -33,15 +37,30 @@ supportedUnits.forEach((unit) => {
   refs.unitOptions.append(option);
 });
 
-document.querySelector("#load-balanced").addEventListener("click", () => loadSample(balancedSample));
-document.querySelector("#load-mismatch").addEventListener("click", () => loadSample(mismatchSample));
+formulaPresets.forEach((preset) => {
+  const option = document.createElement("option");
+  option.value = preset.key;
+  option.textContent = `${preset.label} - ${preset.sample.formula}`;
+  refs.templateSelect.append(option);
+});
+
+document.querySelector("#load-balanced").addEventListener("click", () => loadSample(balancedSample, "force"));
+document.querySelector("#load-mismatch").addEventListener("click", () => loadSample(mismatchSample, "energy-mismatch"));
 document.querySelector("#add-variable").addEventListener("click", () => {
+  markCustom();
   state.variables.push({ name: "", unit: "1", note: "" });
   render();
 });
 document.querySelector("#sync-vars").addEventListener("click", syncVariablesFromFormula);
+refs.templateSelect.addEventListener("change", (event) => {
+  const preset = presetByKey.get(event.target.value);
+  if (preset) {
+    loadSample(preset.sample, preset.key);
+  }
+});
 refs.formulaInput.addEventListener("input", () => {
   state.formula = refs.formulaInput.value;
+  markCustom();
   renderResults();
 });
 refs.variableTable.addEventListener("input", (event) => {
@@ -55,6 +74,7 @@ refs.variableTable.addEventListener("input", (event) => {
     return;
   }
   state.variables[index][field] = event.target.value;
+  markCustom();
   renderResults();
 });
 refs.variableTable.addEventListener("click", (event) => {
@@ -63,6 +83,7 @@ refs.variableTable.addEventListener("click", (event) => {
     return;
   }
   state.variables.splice(Number(button.dataset.remove), 1);
+  markCustom();
   render();
 });
 refs.copyReport.addEventListener("click", copyReport);
@@ -70,12 +91,14 @@ refs.downloadReport.addEventListener("click", downloadReport);
 
 render();
 
-function loadSample(sample) {
+function loadSample(sample, presetKey = "") {
   state = structuredClone(sample);
+  activePresetKey = presetKey;
   render();
 }
 
 function syncVariablesFromFormula() {
+  markCustom();
   const ids = extractFormulaIdentifiers(state.formula);
   const current = new Map(state.variables.filter((row) => row.name).map((row) => [row.name, row]));
   ids.forEach((id) => {
@@ -89,8 +112,14 @@ function syncVariablesFromFormula() {
 
 function render() {
   refs.formulaInput.value = state.formula;
+  refs.templateSelect.value = activePresetKey;
   renderVariables();
   renderResults();
+}
+
+function markCustom() {
+  activePresetKey = "";
+  refs.templateSelect.value = "";
 }
 
 function renderVariables() {

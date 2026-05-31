@@ -88,6 +88,67 @@ export const mismatchSample = {
   ]
 };
 
+export const formulaPresets = [
+  {
+    key: "force",
+    label: "Newton's second law",
+    sample: balancedSample
+  },
+  {
+    key: "energy-mismatch",
+    label: "Kinetic energy missing square",
+    sample: mismatchSample
+  },
+  {
+    key: "ohms-law",
+    label: "Ohm's law",
+    sample: {
+      formula: "V = I * R",
+      variables: [
+        { name: "V", unit: "V", note: "voltage" },
+        { name: "I", unit: "A", note: "current" },
+        { name: "R", unit: "ohm", note: "resistance" }
+      ]
+    }
+  },
+  {
+    key: "simple-pendulum",
+    label: "Simple pendulum period",
+    sample: {
+      formula: "period = 2 * sqrt(length / g)",
+      variables: [
+        { name: "period", unit: "s", note: "oscillation period" },
+        { name: "length", unit: "m", note: "pendulum length" },
+        { name: "g", unit: "m/s^2", note: "gravitational acceleration" }
+      ]
+    }
+  },
+  {
+    key: "pressure",
+    label: "Pressure from force and area",
+    sample: {
+      formula: "P = F / area",
+      variables: [
+        { name: "P", unit: "Pa", note: "pressure" },
+        { name: "F", unit: "N", note: "normal force" },
+        { name: "area", unit: "m^2", note: "contact area" }
+      ]
+    }
+  },
+  {
+    key: "wave-speed",
+    label: "Wave speed",
+    sample: {
+      formula: "v = f * wavelength",
+      variables: [
+        { name: "v", unit: "m/s", note: "wave speed" },
+        { name: "f", unit: "Hz", note: "frequency" },
+        { name: "wavelength", unit: "m", note: "wavelength" }
+      ]
+    }
+  }
+];
+
 export function analyzeFormula(formulaInput, variableRowsInput) {
   const formula = String(formulaInput || "").trim();
   const issues = [];

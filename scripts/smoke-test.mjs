@@ -3,6 +3,7 @@ import {
   balancedSample,
   exportMarkdown,
   extractFormulaIdentifiers,
+  formulaPresets,
   makeReportFileName,
   mismatchSample
 } from "../src/unit-engine.js";
@@ -83,6 +84,31 @@ const unknownUnit = analyzeFormula("F = m * a", [
 assert(
   unknownUnit.prompts.some((prompt) => prompt.includes("compound forms such as kg*m/s^2")),
   "unknown units should generate a concrete repair prompt"
+);
+
+const presetKeys = new Set(formulaPresets.map((preset) => preset.key));
+assert(presetKeys.size === formulaPresets.length, "formula preset keys should be unique");
+assert(presetKeys.has("simple-pendulum"), "formula presets should include a pendulum starter");
+formulaPresets.forEach((preset) => {
+  const analysis = analyzeFormula(preset.sample.formula, preset.sample.variables);
+  assert(analysis.equation, `${preset.key} should parse as one equation`);
+  assert(
+    !analysis.issues.some((issue) => issue.title === "Parse error"),
+    `${preset.key} should not produce parse errors`
+  );
+  assert(preset.sample.variables.length >= 2, `${preset.key} should include a ready variable table`);
+});
+
+const pendulumPreset = formulaPresets.find((preset) => preset.key === "simple-pendulum");
+assert(
+  analyzeFormula(pendulumPreset.sample.formula, pendulumPreset.sample.variables).verdict.key === "balanced",
+  "simple pendulum preset should be dimensionally balanced"
+);
+
+const mismatchPreset = formulaPresets.find((preset) => preset.key === "energy-mismatch");
+assert(
+  analyzeFormula(mismatchPreset.sample.formula, mismatchPreset.sample.variables).verdict.key === "mismatch",
+  "energy mismatch preset should still teach a failing case"
 );
 
 const identifiers = extractFormulaIdentifiers("period = 2 * sqrt(length / g)");

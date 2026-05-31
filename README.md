@@ -4,9 +4,12 @@ Unit Lens is a small local study tool for dimensional analysis. Paste a formula,
 
 It runs as a static HTML/CSS/JS app. There are no accounts, keys, uploads, trackers, or external runtime services.
 
+Live demo: https://bte808.github.io/fun-20260525-c-unit-lens/
+
 ## What it can do
 
 - Check one equation such as `F = m * a`, `E = m * v^2`, or `period = 2 * sqrt(length / g)`.
+- Load starter templates for Newton's second law, Ohm's law, pressure, wave speed, pendulum period, and a deliberate kinetic-energy mismatch.
 - Parse units and compound unit expressions including `N`, `J`, `Pa`, `m/s`, `m/s^2`, and `kg*m/s^2`.
 - Flag left/right dimension mismatches.
 - Flag plus or minus terms that mix different dimensions.
@@ -49,6 +52,10 @@ Then open http://localhost:5178/.
 
 Because the app has no dependencies, opening `index.html` directly also works in most browsers.
 
+## Try it quickly
+
+Open the app and choose a starter template. `Simple pendulum period` demonstrates a balanced square-root expression, while `Kinetic energy missing square` intentionally fails so learners can see the warning style before entering their own formula.
+
 ## Development checks
 
 ```bash
@@ -59,8 +66,8 @@ This runs JavaScript syntax checks plus a smoke test for the formula parser, imp
 
 ## Core usage
 
-1. Enter one formula with exactly one equals sign.
-2. Add every variable in the table.
+1. Pick a starter template or enter one formula with exactly one equals sign.
+2. Add every variable in the table, or use `Find variables` to seed the rows from the formula.
 3. Give each variable a unit expression.
 4. Read the verdict, side dimensions, issue list, and study prompts.
 5. Copy or download the Markdown report into notes or a lab log.
